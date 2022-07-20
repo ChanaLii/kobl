@@ -1,23 +1,37 @@
 package com.kobl.atollspeed.ui.main
 
+import android.content.Context
+import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
-import android.util.Log.DEBUG
 import android.widget.Toast
-import cn.hutool.http.HttpUtil
-import com.kobl.atollspeed.BuildConfig.DEBUG
 import com.kobl.atollspeed.R
 import kotlinx.android.synthetic.main.activity_main.*
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import java.io.IOException
+import android.os.StrictMode
+import android.os.StrictMode.ThreadPolicy
+
 
 class MainActivity : AppCompatActivity() {
 
     private val fruitList = ArrayList<Fruit>()
 
-    private val client = OkHttpClient()
+    private var client: OkHttpClient = OkHttpClient()
+
+    override fun setContentView(layoutResID: Int) {
+        super.setContentView(layoutResID)
+
+        if (Build.VERSION.SDK_INT > 9) {
+            val policy = ThreadPolicy.Builder().permitAll().build()
+            StrictMode.setThreadPolicy(policy)
+        } else {
+            System.out.println(Build.VERSION.SDK_INT)
+        }
+
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -33,10 +47,10 @@ class MainActivity : AppCompatActivity() {
         listView.setOnItemClickListener { _, _, position, _ ->
             val fruit = fruitList[position]
             //"https://api.triascloud.com/monitor/count"
-            val url = "http://10.168.1.50?filename=" + fruit.name;
-            run(url)
-
+            val url = "http://10.168.1.50?filename=" + fruit.name
+            val content = sendHTTPRequest(url)
             Toast.makeText(this, fruit.name, Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, content, Toast.LENGTH_LONG).show()
         }
         Log.d("MainActivity", "onCreate execute")
     }
@@ -57,19 +71,23 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun run(url: String) {
+    private fun sendHTTPRequest(url: String): String {
+        var content = ""
         val request = Request.Builder()
             .url(url)
             .build()
 
-        client.newCall(request).execute().use { response ->
-            if (!response.isSuccessful) throw IOException("Unexpected code $response")
+        val response = client.newCall(request).execute()
 
-            for ((name, value) in response.headers) {
+        response.use { r ->
+            if (!r.isSuccessful) content = ("Unexpected code $r")
+
+            for ((name, value) in r.headers) {
                 println("$name: $value")
             }
-
-            println(response.body!!.string())
+            content = r.body!!.string()
+            println(content)
+            return content
         }
     }
 

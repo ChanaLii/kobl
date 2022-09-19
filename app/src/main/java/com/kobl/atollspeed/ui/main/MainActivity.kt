@@ -47,7 +47,7 @@ class MainActivity : AppCompatActivity() {
         listView.setOnItemClickListener { _, _, position, _ ->
             val fruit = fruitList[position]
             //"https://api.triascloud.com/monitor/count"
-            val url = "http://10.168.1.50?filename=" + fruit.name
+            val url = "http://10.168.2.181/?filename=" + fruit.name
             val content = sendHTTPRequest(url)
             Toast.makeText(this, fruit.name, Toast.LENGTH_SHORT).show()
             Toast.makeText(this, content, Toast.LENGTH_LONG).show()
